@@ -2,10 +2,38 @@
 
 import { useEffect, useRef, useState } from "react"
 import { loadGoogleMaps, createMarkerSVG, HAZARD_COLORS } from "../services/googlemaps"
-import { AlertTriangle, Navigation } from "lucide-react"
+import { AlertTriangle, Navigation, Moon, Sun } from "lucide-react"
 import { config } from "../config"
 
 const MIN_CONFIDENCE_THRESHOLD = 0.4 // 40%
+
+const DAY_MAP_STYLE = [
+  {
+    featureType: "poi",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+]
+
+const NIGHT_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#4b6878" }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#64779e" }] },
+  { featureType: "landscape.man_made", elementType: "geometry.stroke", stylers: [{ color: "#334e87" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#023e58" }] },
+  { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#023e58" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#98a5be" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2c6675" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#255763" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#b0d5ce" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4e6d70" }] },
+]
 
 const demoPositions = [
   { top: "31%", left: "34%" },
@@ -48,6 +76,7 @@ const MapContainer = ({
 
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isNightMode, setIsNightMode] = useState(false)
   const isOfflineMapMode =
     !config.googleMapsApiKey ||
     error?.includes("API Key") ||
@@ -74,13 +103,7 @@ const MapContainer = ({
         const mapOptions = {
           center: { lat: userLocation?.lat || 28.6139, lng: userLocation?.lng || 77.209 },
           zoom: 16,
-          styles: [
-            {
-              featureType: "poi",
-              elementType: "labels",
-              stylers: [{ visibility: "off" }],
-            },
-          ],
+          styles: DAY_MAP_STYLE,
           disableDefaultUI: true,
           zoomControl: true,
           zoomControlOptions: {
@@ -126,6 +149,12 @@ const MapContainer = ({
   useEffect(() => {
     initMap()
   }, [])
+
+  // Swap map styles when the night mode toggle changes.
+  useEffect(() => {
+    if (!mapInstanceRef.current) return
+    mapInstanceRef.current.setOptions({ styles: isNightMode ? NIGHT_MAP_STYLE : DAY_MAP_STYLE })
+  }, [isNightMode])
 
   useEffect(() => {
     if (!config.googleMapsApiKey) {
@@ -314,6 +343,16 @@ const MapContainer = ({
   return (
     <div className="relative w-full h-full bg-gray-200">
       <div ref={mapRef} className="w-full h-full" />
+
+      {!isOfflineMapMode && !error && (
+        <button
+          onClick={() => setIsNightMode((prev) => !prev)}
+          className="absolute top-1/2 -translate-y-1/2 right-16 z-20 w-10 h-10 rounded-full shadow-lg flex items-center justify-center bg-white/95 hover:bg-white transition-colors"
+          title={isNightMode ? "Switch to day map" : "Switch to night map"}
+        >
+          {isNightMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-700" />}
+        </button>
+      )}
 
       {isOfflineMapMode && (
         <div className="absolute inset-0 bg-slate-100 z-30 overflow-hidden">

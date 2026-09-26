@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SpeedPanel } from "./panels/SpeedPanel"
-import { HazardStatusPanel } from "./panels/HazardStatusPanel"
+import { StatusHUD } from "./StatusHUD"
 import { AddHazardPanel } from "./panels/AddHazardPanel"
 import { RemoveHazardPanel } from "./panels/RemoveHazardPanel"
 import { FiltersPanel } from "./panels/FiltersPanel"
@@ -27,10 +26,9 @@ export const BottomDock = ({
   predictedHazards = [],
   currentSegmentStatus,
 }) => {
-  const [activeTab, setActiveTab] = useState("status")
+  const [activeTab, setActiveTab] = useState("add-hazard")
 
   const tabs = [
-    { id: "status", label: "Status" },
     { id: "add-hazard", label: "Add Hazard" },
     { id: "remove-hazard", label: "Remove Hazard" },
     { id: "filters", label: "Filters" },
@@ -48,6 +46,14 @@ export const BottomDock = ({
             currentSegmentStatus={currentSegmentStatus}
           />
         </div>
+
+        <StatusHUD
+          currentSpeed={currentSpeed}
+          statusText={statusText}
+          proximityAlert={proximityAlert}
+          isDetecting={isDetecting}
+          setIsDetecting={setIsDetecting}
+        />
 
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 overflow-x-auto">
@@ -68,27 +74,18 @@ export const BottomDock = ({
 
         {/* Tab Content */}
         <div className="p-4 max-h-64 overflow-y-auto">
-          {activeTab === "status" && (
-            <>
-              <SpeedPanel
-                currentSpeed={currentSpeed}
-                warningDistance={warningDistance}
-                setWarningDistance={setWarningDistance}
-              />
-              <HazardStatusPanel
-                statusText={statusText}
-                proximityAlert={proximityAlert}
-                isDetecting={isDetecting}
-                setIsDetecting={setIsDetecting}
-              />
-            </>
-          )}
-
           {activeTab === "add-hazard" && <AddHazardPanel onAddHazard={onAddHazard} />}
 
           {activeTab === "remove-hazard" && <RemoveHazardPanel hazards={hazards} onRemoveHazard={onRemoveHazard} />}
 
-          {activeTab === "filters" && <FiltersPanel filters={filters} setFilters={setFilters} />}
+          {activeTab === "filters" && (
+            <FiltersPanel
+              filters={filters}
+              setFilters={setFilters}
+              warningDistance={warningDistance}
+              setWarningDistance={setWarningDistance}
+            />
+          )}
 
           {activeTab === "summary" && (
             <RouteSummaryPanel routeSummary={routeSummary} predictedHazards={predictedHazards} />

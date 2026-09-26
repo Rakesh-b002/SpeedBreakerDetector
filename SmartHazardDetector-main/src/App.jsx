@@ -9,6 +9,7 @@ import { RouteInput } from "./components/RouteInput"
 import { NavigationPanel } from "./components/NavigationPanel"
 import { HazardAlert } from "./components/HazardAlert"
 import { FirebaseStatus } from "./components/FirebaseStatus"
+import { useToast } from "./components/Toast"
 import { useGeolocation } from "./hooks/useGeolocation"
 import { useMotionDetection } from "./hooks/useMotionDetection"
 import { useDynamicRoadStatus } from "./hooks/useDynamicRoadStatus"
@@ -33,6 +34,7 @@ import { analyzeRouteForHazards } from "./services/routeAnalysisService"
 import { validateConfig } from "./config"
 
 export default function App() {
+  const { showToast } = useToast()
   const [map, setMap] = useState(null)
   const [google, setGoogle] = useState(null)
   const [hazards, setHazards] = useState([])
@@ -296,14 +298,14 @@ export default function App() {
       console.log("[v0] createHazard returned:", hazardId)
       if (hazardId) {
         console.log("[v0] Manual hazard created successfully with ID:", hazardId)
-        alert("Hazard reported successfully!")
+        showToast("Hazard reported successfully!", { type: "success" })
       } else {
         console.error("[v0] Failed to create manual hazard - no ID returned")
-        alert("Failed to report hazard. Check console for details.")
+        showToast("Failed to report hazard. Please try again.", { type: "error" })
       }
     } catch (error) {
       console.error("[v0] Error adding hazard:", error)
-      alert(`Error: ${error.message}`)
+      showToast(`Couldn't report hazard: ${error.message}`, { type: "error" })
     }
   }
 
@@ -316,9 +318,10 @@ export default function App() {
         removalVotes: 1,
       })
       console.log("[v0] Removal request submitted for hazard:", hazardId)
+      showToast("Removal requested — it'll clear once confirmed by other drivers.", { type: "success" })
     } catch (error) {
       console.error("[v0] Error removing hazard:", error)
-      alert(`Error: ${error.message}`)
+      showToast(`Couldn't submit removal request: ${error.message}`, { type: "error" })
     }
   }
 
@@ -326,10 +329,11 @@ export default function App() {
     const connected = await retryFirebaseConnection()
     if (connected) {
       setShowFirebaseWarning(false)
-      alert("Connected to Firebase successfully!")
-      window.location.reload()
+      showToast("Connected to Firebase — live hazard data is back.", { type: "success" })
+      // No reload needed: subscribeToHazards' onSnapshot listener starts
+      // receiving updates as soon as the connection is live.
     } else {
-      alert("Still unable to connect. Please check Firebase Console.")
+      showToast("Still unable to connect. Check the Firebase console.", { type: "error" })
     }
   }
 

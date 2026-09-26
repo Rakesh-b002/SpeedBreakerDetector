@@ -8,7 +8,7 @@ const hazardTypes = [
   { value: "manhole", label: "Manhole", color: HAZARD_COLORS.manhole },
 ]
 
-export const FiltersPanel = ({ filters, setFilters }) => {
+export const FiltersPanel = ({ filters, setFilters, warningDistance, setWarningDistance }) => {
   const toggleType = (type) => {
     setFilters((prev) => ({
       ...prev,
@@ -34,6 +34,26 @@ export const FiltersPanel = ({ filters, setFilters }) => {
 
   return (
     <div className="space-y-4">
+      <div className="space-y-2 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <label className="text-gray-700 font-medium">Warning Distance</label>
+          <span className="text-lg font-semibold text-orange-500">{warningDistance}m</span>
+        </div>
+        <input
+          type="range"
+          min="25"
+          max="500"
+          step="25"
+          value={warningDistance}
+          onChange={(e) => setWarningDistance(Number(e.target.value))}
+          className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+        />
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>25m</span>
+          <span>500m</span>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <label className="block text-gray-700 font-medium">Hazard Types</label>
         <div className="space-y-1">
